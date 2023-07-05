@@ -1,6 +1,8 @@
 {
   "name": "maa-assets",
-  "main": "src",
+  "scripts": {
+    "build": "tsx res/index.ts"
+  },
   "devDependencies": {
     "@types/node": "^20.3.3",
     "prettier": "^2.8.8",

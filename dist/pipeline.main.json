@@ -1,0 +1,12 @@
+{
+    "EmptyTask": {
+        "name": "EmptyTask",
+        "base": "abc",
+        "next": [
+            "OtherTask"
+        ]
+    },
+    "OtherTask": {
+        "name": "OtherTask"
+    }
+}
