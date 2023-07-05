@@ -132,3 +132,9 @@ export type TaskInfo = {
    */
   notify?: boolean
 }
+
+export type ProcessedTaskInfo = {
+  [key in keyof TaskInfo]: TaskInfo[key] extends OneOrArray<TaskInfo>
+    ? OneOrArray<string>
+    : TaskInfo[key]
+}

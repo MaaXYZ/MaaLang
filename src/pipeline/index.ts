@@ -1,11 +1,14 @@
 import { writeFile } from 'fs/promises'
-import { TaskInfo } from './types'
+import type { TaskInfo, ProcessedTaskInfo } from './types'
+
+export type { TaskInfo, ProcessedTaskInfo }
 
 type TaskInfoWithProxy = TaskInfo & {
   $: Omit<TaskInfo, 'name'>
 }
 
 const tasks: Record<string, TaskInfo> = {}
+const process_keys = ['next', 'timeout_next', 'runout_next']
 
 export function $(): Record<string, TaskInfoWithProxy> {
   return new Proxy(
@@ -20,7 +23,9 @@ export function $(): Record<string, TaskInfoWithProxy> {
           set(target, key, value) {
             if (key === '$') {
               for (const k in value) {
-                target[k] = value[k]
+                if (k !== 'name') {
+                  target[k] = value[k]
+                }
               }
               return false
             } else {
@@ -34,30 +39,25 @@ export function $(): Record<string, TaskInfoWithProxy> {
   )
 }
 
-export function $$(): string
-export function $$(path: ''): string
+export function $$(): ProcessedTaskInfo
+export function $$(path: ''): ProcessedTaskInfo
 export function $$(path: string): Promise<void>
-export function $$(path?: string): string | Promise<void> {
-  const process_keys = ['next', 'timeout_next', 'runout_next']
-  const result = JSON.stringify(
-    tasks,
-    (key, value) => {
-      if (process_keys.includes(key)) {
-        if (value instanceof Array) {
-          return value.map(x => x.name)
-        } else {
-          return value.name
-        }
+export function $$(path?: string): ProcessedTaskInfo | Promise<void> {
+  const result = JSON.stringify(tasks, (key, value) => {
+    if (process_keys.includes(key)) {
+      if (value instanceof Array) {
+        return value.map(x => x.name)
       } else {
-        return value
+        return value.name
       }
-    },
-    4
-  )
+    } else {
+      return value
+    }
+  })
 
   if (path) {
     return writeFile(path, result)
   } else {
-    return result
+    return JSON.parse(result)
   }
 }

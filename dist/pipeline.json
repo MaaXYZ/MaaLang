@@ -1,0 +1,1 @@
+{"EmptyTask":{"name":"EmptyTask","base":"abc","next":["OtherTask"]},"OtherTask":{"name":"OtherTask","base":"abc","next":["OtherTask"]}}

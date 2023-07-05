@@ -7,4 +7,6 @@ EmptyTask.$ = {
   next: [OtherTask]
 }
 
+OtherTask.$ = EmptyTask
+
 export default $$()

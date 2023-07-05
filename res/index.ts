@@ -1,14 +1,26 @@
-import { writeFile } from 'fs/promises'
-import pipeline_main from './pipeline/main'
+import type { ProcessedTaskInfo } from '@/pipeline'
+import { mkdir, readdir, writeFile } from 'fs/promises'
 
-const result = {
-  'dist/pipeline.main.json': pipeline_main
+async function build_pipeline() {
+  const result: Record<string, ProcessedTaskInfo> = {}
+  await mkdir('dist/pipeline', {
+    recursive: true
+  })
+  for (const path of await readdir('res/pipeline')) {
+    const data = (await import(`./pipeline/${path}`)).default
+    await writeFile(
+      `dist/pipeline/${path.replace('.ts', '.json')}`,
+      JSON.stringify(data, null, 2)
+    )
+    for (const key in data) {
+      if (key in result) {
+        console.warn('Meet duplicated key', key)
+      } else {
+        result[key] = data[key]
+      }
+    }
+  }
+  await writeFile('dist/pipeline.json', JSON.stringify(result))
 }
 
-async function main() {
-  await Promise.all(
-    Object.keys(result).map(path => writeFile(path, result[path]))
-  )
-}
-
-main()
+build_pipeline()
