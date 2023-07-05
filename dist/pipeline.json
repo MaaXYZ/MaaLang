@@ -1,1 +1,1 @@
-{"EmptyTask":{"name":"EmptyTask","base":"abc","next":["OtherTask"]},"OtherTask":{"name":"OtherTask","base":"abc","next":["OtherTask"]}}
+{"OtherTask":{"name":"OtherTask","next":["NavigateTo1-7"]},"NavigateTo1-7":{"name":"NavigateTo1-7"}}

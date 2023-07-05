@@ -14,21 +14,34 @@ export function $(): Record<string, TaskInfoWithProxy> {
   return new Proxy(
     {},
     {
-      get(_, key: string) {
+      get(_, name: string) {
         const t = {
-          name: key
+          name
         }
-        tasks[key] = t
+        if (name in tasks) {
+          console.warn(name, 'already declared')
+        }
+        tasks[name] = t
         return new Proxy(t, {
           set(target, key, value) {
             if (key === '$') {
               for (const k in value) {
-                if (k !== 'name') {
-                  target[k] = value[k]
+                if (k === 'name') {
+                  continue
                 }
+                target[k] = value[k]
               }
               return false
             } else {
+              if (key === 'name') {
+                if (value !== name) {
+                  if (value in tasks) {
+                    console.warn(value, 'already declared')
+                  }
+                  tasks[value] = tasks[name]
+                  delete tasks[name]
+                }
+              }
               target[key] = value
               return true
             }
