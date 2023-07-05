@@ -1,5 +1,5 @@
 {
-  "name": "maa-assets",
+  "name": "maa-lang",
   "scripts": {
     "build": "tsx res/index.ts"
   },
