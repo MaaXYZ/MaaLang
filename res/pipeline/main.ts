@@ -3,9 +3,13 @@ import { $, $$ } from '@/pipeline'
 const { EmptyTask, OtherTask } = $()
 
 OtherTask.$ = {
-  next: [EmptyTask]
+  next: [EmptyTask],
+  action: 'WaitFreezes'
 }
 
-EmptyTask.name = 'NavigateTo1-7'
+EmptyTask.$ = {
+  action: 'Click',
+  target: OtherTask
+}
 
 export default $$()

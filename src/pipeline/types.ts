@@ -2,6 +2,35 @@ type OneOrArray<T> = T | T[]
 
 type Rect = [number, number, number, number]
 
+type ArrayFixLength<T, N extends number> = readonly T[] & { length: N }
+
+type TemplateThresholdPair<N extends number> = {
+  /**
+   * 模板图片路径，绝对、相对均可
+   *
+   * 必选
+   */
+  template: ArrayFixLength<string, N> | [never]
+
+  /**
+   * 模板匹配阈值
+   *
+   * 可选，默认 0.8
+   */
+  threshold: ArrayFixLength<number, N & {}> | [never]
+}
+
+// RUST和GO发来贺电
+type TemplateThreshold =
+  | TemplateThresholdPair<1>
+  | TemplateThresholdPair<2>
+  | TemplateThresholdPair<3>
+  | TemplateThresholdPair<4>
+  | TemplateThresholdPair<5>
+  | TemplateThresholdPair<6>
+  | TemplateThresholdPair<7>
+  | TemplateThresholdPair<8>
+
 export type TaskInfo = {
   /**
    * 任务名
@@ -10,7 +39,7 @@ export type TaskInfo = {
    *
    * 任务的名称
    */
-  name: string
+  name?: string
 
   /**
    * 基任务名
@@ -20,18 +49,6 @@ export type TaskInfo = {
    * 若有，则所有没写的属性字段都使用基任务的值
    */
   base?: string
-
-  /**
-   * 识别算法类型
-   *
-   * 可选，默认`DirectHit`
-   */
-  recognition?:
-    | 'DirectHit'
-    | 'TemplateMatch'
-    | 'OcrDetAndRec'
-    | 'OcrOnlyRec'
-    | 'FreezesWait'
 
   /**
    * 识别区域坐标
@@ -52,25 +69,13 @@ export type TaskInfo = {
   cache?: boolean
 
   /**
-   * 执行的动作
-   *
-   * 可选，默认`DoNothing`
-   */
-  action?:
-    | 'DoNothing'
-    | 'ClickSelf'
-    | 'ClickRegion'
-    | 'SwipeSelf'
-    | 'SwipeRegion'
-
-  /**
    * 接下来要执行的任务列表
    *
    * 可选，默认空
    *
    * 按序识别每个任务，只执行第一个识别到的
    */
-  next?: OneOrArray<TaskInfo>
+  next?: OneOrArray<TaskInfoHandler>
 
   /**
    * 超时时间，毫秒
@@ -84,21 +89,21 @@ export type TaskInfo = {
    *
    * 可选，默认空
    */
-  timeout_next?: OneOrArray<TaskInfo>
+  timeout_next?: OneOrArray<TaskInfoHandler>
 
   /**
    * 任务执行次数
    *
    * 可选，默认`UINT_MAX`
    */
-  run_times?: number
+  times_limit?: number
 
   /**
    * 任务执行次数达到了后执行的任务列表
    *
    * 可选，默认空
    */
-  runout_next?: OneOrArray<TaskInfo>
+  runout_next?: OneOrArray<TaskInfoHandler>
 
   /**
    * 识别到 到 执行动作前 的延迟，毫秒
@@ -130,11 +135,186 @@ export type TaskInfo = {
    *
    * 可选，默认否
    */
-  notify?: boolean
-}
+  notification?: boolean
+} & (
+  | {
+      /**
+       * 识别算法类型
+       *
+       * 可选，默认`DirectHit`
+       *
+       * - *DirectHit*: 直接命中，即不进行识别，直接执行动作
+       * - *TemplateMatch*: 模板匹配，即“找图”
+       * - *OCR*: 文字识别
+       */
+      recognition?: 'DirectHit'
+    }
+  | ({
+      recognition: 'TemplateMatch'
 
-export type ProcessedTaskInfo = {
-  [key in keyof TaskInfo]: TaskInfo[key] extends OneOrArray<TaskInfo>
-    ? OneOrArray<string>
-    : TaskInfo[key]
+      /**
+       * 模板匹配算法，即 cv::TemplateMatchModes
+       *
+       * 可选，默认 3
+       *
+       * 仅支持 1、3、5，可简单理解为越大的越精确，但也会更慢
+       *
+       * 详情请参考 [OpenCV 官方文档](https://docs.opencv.org/4.x/df/dfb/group__imgproc__object.html)
+       */
+      method?: 1 | 3 | 5
+
+      /**
+       * 是否进行绿色掩码
+       *
+       * 可选，默认 false
+       *
+       * 若为 true，可以将图片中不希望匹配的部分涂绿 RGB: (0, 255, 0)，则不对绿色部分进行匹配
+       */
+      green_mask?: boolean
+    } & (
+      | {
+          /**
+           * 模板图片路径，绝对、相对均可
+           *
+           * 必选
+           */
+          template: string | string[]
+
+          /**
+           * 模板匹配阈值
+           *
+           * 可选，默认 0.8
+           */
+          threshold?: number
+        }
+      | TemplateThreshold
+    ))
+  | {
+      recognition: 'OCR'
+
+      /**
+       * 要匹配的文字，支持正则
+       *
+       * 必选
+       */
+      text: string | string[]
+
+      /**
+       * 部分文字识别结果不准确，进行替换
+       *
+       * 可选。
+       */
+      replace?: [string, string] | [string, string][]
+
+      /**
+       * 是否仅识别（不进行检测，需要精确设置 roi）
+       *
+       * 可选，默认 false
+       */
+      only_rec?: boolean
+    }
+) &
+  (
+    | {
+        /**
+         * 执行的动作
+         *
+         * 可选，默认`DoNothing`
+         *
+         * - *DoNothing*: 什么都不做
+         * - *Click*: 点击
+         * - *Swipe*: 滑动
+         * - *WaitFreezes*: 等待画面静止。需连续 `frozen_time` 毫秒 画面 **没有较大变化** 才会退出动作
+         */
+        action?: 'DoNothing'
+      }
+    | {
+        action: 'Click'
+
+        /**
+         * 点击的位置
+         *
+         * 可选，默认 true
+         *
+         * - *true*: 点击本任务中刚刚识别到的目标。
+         * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
+         * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+         */
+        target?: true | TaskInfoHandler | Rect
+      }
+    | {
+        action: 'Swipe'
+
+        /**
+         * 滑动起点
+         *
+         * 可选，默认 true
+         *
+         * - *true*: 点击本任务中刚刚识别到的目标。
+         * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
+         * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+         */
+        begin?: true | TaskInfoHandler | Rect
+
+        /**
+         * 滑动终点
+         *
+         * 必选
+         *
+         * - *true*: 点击本任务中刚刚识别到的目标。
+         * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
+         * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+         */
+        end: true | TaskInfoHandler | Rect
+
+        /**
+         * 滑动持续时间，单位毫秒
+         *
+         * 可选，默认 200
+         */
+        duration?: number
+      }
+    | {
+        action: 'WaitFreezes'
+
+        /**
+         * 连续 frozen_time 毫秒 画面 *没有较大变化* 才会退出动作
+         *
+         * 可选，默认 5000。
+         */
+        frozen_time?: number
+
+        /**
+         * 等待的目标
+         *
+         * 可选，默认 true
+         *
+         * - *true*: 点击本任务中刚刚识别到的目标。
+         * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
+         * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+         */
+        target?: true | TaskInfoHandler | Rect
+
+        /**
+         * 判断“没有较大变化”的模板匹配阈值
+         *
+         * 可选，默认 0.95
+         */
+        threshold?: number
+
+        /**
+         * 判断“没有较大变化”的模板匹配算法，即 cv::TemplateMatchModes
+         *
+         * 可选，默认 3
+         *
+         * 仅支持 1、3、5，可简单理解为越大的越精确，但也会更慢
+         *
+         * 详情请参考 [OpenCV 官方文档](https://docs.opencv.org/4.x/df/dfb/group__imgproc__object.html)
+         */
+        method?: 1 | 3 | 5
+      }
+  )
+
+export type TaskInfoHandler = {
+  $: TaskInfo
 }

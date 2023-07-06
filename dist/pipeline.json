@@ -1,1 +1,1 @@
-{"OtherTask":{"name":"OtherTask","next":["NavigateTo1-7"]},"NavigateTo1-7":{"name":"NavigateTo1-7"}}
+{"EmptyTask":{"name":"EmptyTask","action":"Click","target":"OtherTask"},"OtherTask":{"name":"OtherTask","next":["EmptyTask"],"action":"WaitFreezes"}}

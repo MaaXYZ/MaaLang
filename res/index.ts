@@ -1,8 +1,7 @@
-import type { ProcessedTaskInfo } from '@/pipeline'
 import { mkdir, readdir, writeFile } from 'fs/promises'
 
 async function build_pipeline() {
-  const result: Record<string, ProcessedTaskInfo> = {}
+  const result: Record<string, unknown> = {}
   await mkdir('dist/pipeline', {
     recursive: true
   })

@@ -4,9 +4,11 @@
     "module": "ESNext",
     "moduleResolution": "NodeNext",
     "allowSyntheticDefaultImports": true,
+    "allowJs": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "outDir": "dist"
   },
-  "include": ["src/**/*.ts", "res/**/*.ts"]
+  "include": ["src/**/*.ts", "res/**/*.ts", "src/pipeline/index.js"]
 }
