@@ -1,1 +1,0 @@
-{"EmptyTask":{"name":"EmptyTask","action":"Click","target":"OtherTask"},"OtherTask":{"name":"OtherTask","next":["EmptyTask"],"action":"WaitFreezes"}}

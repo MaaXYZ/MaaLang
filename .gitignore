@@ -1,3 +1,4 @@
 node_modules
 
-dist/pipeline/
+dist/
+res/pipeline/*.ts
