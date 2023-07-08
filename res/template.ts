@@ -1,7 +1,13 @@
 import { $, $$ } from '@/pipeline'
 
-const { task } = $()
+const { task, task2, task3, task4, task5 } = $()
 
-task.$ = {}
+task.$ = {
+  next: [task2, task3]
+}
+
+task4.$ = {
+  next: [task5]
+}
 
 export default $$()

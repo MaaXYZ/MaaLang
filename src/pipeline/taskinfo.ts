@@ -350,4 +350,7 @@ export type TaskInfo = TaskGeneral & Recognition & Action
 
 export type TaskInfoHandler = {
   $: TaskInfo
+  $next: TaskInfoHandler
+  $timeout_next: TaskInfoHandler
+  $runout_next: TaskInfoHandler
 }

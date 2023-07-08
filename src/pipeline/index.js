@@ -107,6 +107,16 @@ export function $() {
               }
             }
             return false
+          },
+          get(target, key) {
+            const keys = ['$next', '$timeout_next', '$runout_next']
+            if (!keys.includes(key)) {
+              return target[key]
+            }
+            return {
+              ref: t,
+              key: key.substring(1)
+            }
           }
         })
       }
@@ -115,12 +125,30 @@ export function $() {
 }
 
 export function $$() {
+  const needSplit = new Set()
+
+  const transferItem = x => {
+    if (x.name) {
+      return x.name
+    } else if (x.ref) {
+      const k = `${x.ref.name}#${x.key}`
+      needSplit.add(k)
+      return k
+    } else {
+      return x
+    }
+  }
+
   const result = JSON.stringify(tasks, (key, value) => {
     if (process_keys.includes(key)) {
-      if (value instanceof Array && value.length > 0 && value[0].name) {
-        return value.map(x => x.name)
-      } else if (value instanceof Object && value.name) {
-        return value.name
+      if (
+        value instanceof Array &&
+        value.length > 0 &&
+        (value[0].name || value[0].ref)
+      ) {
+        return value.map(transferItem)
+      } else if (value instanceof Object && (value.name || value.ref)) {
+        return transferItem(value)
       } else {
         return value
       }
@@ -129,5 +157,17 @@ export function $$() {
     }
   })
 
-  return JSON.parse(result)
+  const res = JSON.parse(result)
+
+  for (const key of needSplit) {
+    const [taskName, nextKey] = key.split('#')
+    const arr = res[taskName][nextKey]
+    res[taskName][nextKey] = key
+    res[key] = {
+      name: key,
+      next: arr
+    }
+  }
+
+  return res
 }

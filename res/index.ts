@@ -6,6 +6,9 @@ async function build_pipeline() {
     recursive: true
   })
   for (const path of await readdir('res/pipeline')) {
+    if (!/.ts$/.test(path)) {
+      continue
+    }
     const data = (await import(`./pipeline/${path}`)).default
     await writeFile(
       `dist/pipeline/${path.replace('.ts', '.json')}`,
