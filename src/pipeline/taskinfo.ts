@@ -204,7 +204,7 @@ type Recognition =
       /**
        * 部分文字识别结果不准确，进行替换
        *
-       * 可选。
+       * 可选
        */
       replace?: [string, string] | [string, string][]
 
@@ -226,7 +226,9 @@ type Action =
        * - *DoNothing*: 什么都不做
        * - *Click*: 点击
        * - *Swipe*: 滑动
-       * - *WaitFreezes*: 等待画面静止。需连续 `frozen_time` 毫秒 画面 **没有较大变化** 才会退出动作
+       * - *WaitFreezes*: 等待画面静止需连续 `frozen_time` 毫秒 画面 **没有较大变化** 才会退出动作
+       * - *StartApp*: 启动App
+       * - *StopApp*: 停止App
        */
       action?: 'DoNothing'
     }
@@ -238,9 +240,9 @@ type Action =
        *
        * 可选，默认 true
        *
-       * - *true*: 点击本任务中刚刚识别到的目标。
-       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
-       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+       * - *true*: 点击本任务中刚刚识别到的目标
+       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标
+       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]
        */
       target?: true | TaskInfoHandler | Rect
     }
@@ -252,9 +254,9 @@ type Action =
        *
        * 可选，默认 true
        *
-       * - *true*: 点击本任务中刚刚识别到的目标。
-       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
-       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+       * - *true*: 点击本任务中刚刚识别到的目标
+       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标
+       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]
        */
       begin?: true | TaskInfoHandler | Rect
 
@@ -263,9 +265,9 @@ type Action =
        *
        * 必选
        *
-       * - *true*: 点击本任务中刚刚识别到的目标。
-       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
-       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+       * - *true*: 点击本任务中刚刚识别到的目标
+       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标
+       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]
        */
       end: true | TaskInfoHandler | Rect
 
@@ -282,7 +284,7 @@ type Action =
       /**
        * 连续 frozen_time 毫秒 画面 *没有较大变化* 才会退出动作
        *
-       * 可选，默认 5000。
+       * 可选，默认 5000
        */
       frozen_time?: number
 
@@ -291,9 +293,9 @@ type Action =
        *
        * 可选，默认 true
        *
-       * - *true*: 点击本任务中刚刚识别到的目标。
-       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标。
-       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]。
+       * - *true*: 点击本任务中刚刚识别到的目标
+       * - *string*: 填写任务名，点击之前执行过的某任务识别到的目标
+       * - *array<int, 4>*: 点击固定坐标区域内随机一点，[x, y, w, h]，若希望全屏可设为 [0, 0, 0, 0]
        */
       target?: true | TaskInfoHandler | Rect
 
@@ -314,6 +316,34 @@ type Action =
        * 详情请参考 [OpenCV 官方文档](https://docs.opencv.org/4.x/df/dfb/group__imgproc__object.html)
        */
       method?: 1 | 3 | 5
+    }
+  | {
+      action: 'StartApp'
+
+      /**
+       * 启动入口
+       *
+       * 可选，默认空
+       *
+       * 需要填入 activity，例如 `com.hypergryph.arknights/com.u8.sdk.U8UnityContext`
+       *
+       * 若为空，将启动 `MaaControllerSetOption` - `MaaCtrlOption_DefaultAppPackageEntry` 设置的入口
+       */
+      package: string
+    }
+  | {
+      action: 'StopApp'
+
+      /**
+       * 要关闭的程序
+       *
+       * 可选，默认空
+       *
+       * 需要填入 package name，例如 `com.hypergryph.arknights`
+       *
+       * 若为空，将关闭 `MaaControllerSetOption` - `MaaCtrlOption_DefaultAppPackage` 设置的 APP
+       */
+      package: string
     }
 
 export type TaskInfo = TaskGeneral & Recognition & Action

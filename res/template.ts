@@ -1,5 +1,7 @@
 import { $, $$ } from '@/pipeline'
 
-const {} = $()
+const { task } = $()
+
+task.$ = {}
 
 export default $$()
