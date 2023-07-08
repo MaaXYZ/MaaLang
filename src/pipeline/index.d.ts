@@ -1,4 +1,4 @@
-import type { TaskInfo, TaskInfoHandler } from './types'
+import type { TaskInfo, TaskInfoHandler } from './taskinfo'
 
 export type { TaskInfo, TaskInfoHandler }
 
