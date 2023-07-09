@@ -1,7 +1,8 @@
 {
   "name": "maa-lang",
   "scripts": {
-    "build": "tsx res/index.ts"
+    "build": "tsx res/build.ts",
+    "parse": "tsx res/parse.ts"
   },
   "devDependencies": {
     "@types/node": "^20.3.3",

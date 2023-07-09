@@ -1,4 +1,4 @@
 node_modules
 
 dist/
-res/pipeline/*.ts
+res/pipeline*/*.ts

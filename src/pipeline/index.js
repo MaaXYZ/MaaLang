@@ -1,4 +1,5 @@
 const tasks = {}
+
 const process_keys = [
   'next',
   'timeout_next',
@@ -48,11 +49,12 @@ function checkThres(n, v) {
   }
 }
 
-export function $() {
+export function $(module) {
   return new Proxy(
     {},
     {
       get(_, name) {
+        name = `${module}.${name}`
         const t = {
           name
         }
@@ -69,8 +71,9 @@ export function $() {
               let v = value[k]
               switch (k) {
                 case 'name':
+                  v = `${module}.${v}`
                   if (v in tasks) {
-                    console.warn('task', name, 'already declared')
+                    console.warn('task', v, 'already declared')
                   }
                   target.name = v
                   delete tasks[target.name]
