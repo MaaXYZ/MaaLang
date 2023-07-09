@@ -8,7 +8,12 @@ async function build_pipeline() {
     }
     await import(`./pipeline/${path}`)
   }
-  await writeFile('dist/pipeline.json', JSON.stringify($$(), null, 2))
+  try {
+    const obj = $$()
+    await writeFile('dist/pipeline.json', JSON.stringify(obj, null, 2))
+  } catch (err) {
+    console.error(err)
+  }
 }
 
 build_pipeline()

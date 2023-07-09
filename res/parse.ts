@@ -10,15 +10,13 @@ const refKeys = [
   'end'
 ]
 
-const splitKeys = ['next', 'timeout_next', 'runout_next']
-
-function parse_name(key: string): [string, string, string | null] {
-  const match = /^(.+)\.([^.#]+)(?:#(.+))?$/.exec(key)
+function parse_name(key: string): [string, string] {
+  const match = /^(.+)\.([^.]+)$/.exec(key)
   if (!match) {
     console.warn('Unknown key', key)
-    return ['', '', null]
+    return ['', '']
   }
-  return [match[1], match[2], match[3] ?? null]
+  return [match[1], match[2]]
 }
 
 function fixName(name: string) {
@@ -41,15 +39,9 @@ async function parse_pipeline() {
     }
   > = {}
 
-  const splitInfo: Record<string, undefined | string | string[]> = {}
-
   for (const key in result) {
-    const [scope, name, subk] = parse_name(key)
+    const [scope, name] = parse_name(key)
     if (!scope) {
-      continue
-    }
-    if (subk) {
-      splitInfo[key] = result[key][subk]
       continue
     }
     if (!(scope in scopeInfo)) {
@@ -60,12 +52,19 @@ async function parse_pipeline() {
     info.names.push(name)
 
     for (const sk of refKeys) {
-      let v = (result[key] as any)[sk] as undefined | string | string[]
+      let v = (result[key] as any)[sk]
       if (!(v instanceof Array)) {
         v = v ? [v] : []
       }
       for (const k of v) {
-        const [ss, sn] = parse_name(k)
+        if (typeof k !== 'object') {
+          continue
+        }
+        const rk = k.ref ?? k.refk ?? null
+        if (!rk) {
+          return
+        }
+        const [ss, sn] = parse_name(rk)
         if (!ss || ss === scope) {
           continue
         }
@@ -108,14 +107,26 @@ async function parse_pipeline() {
       ''
     )
 
-    const resolveRef = (name: string) => {
-      const [s, n, sk] = parse_name(name)
-      const tail = sk ? `.$${sk}` : ''
+    const resolve = (name: string) => {
+      const [s, n] = parse_name(name)
       if (s === scope) {
-        return n + tail
+        return n
       } else {
-        return `${s}.${n}`.replace('.', '$') + tail
+        return `${s}.${n}`.replaceAll('.', '$')
       }
+    }
+
+    const resolveRef = (val: any) => {
+      if (val instanceof Array) {
+        return `[${val.map(resolveRef).join(', ')}]`
+      } else if (typeof val === 'object') {
+        if (val.ref) {
+          return resolve(val.ref)
+        } else if (val.refk) {
+          return `${resolve(val.refk)}.$${val.key}`
+        }
+      }
+      return JSON.stringify(val)
     }
 
     for (const task of info.names) {
@@ -123,25 +134,11 @@ async function parse_pipeline() {
       const fullName = `${scope}.${task}`
       const data = result[fullName] as Record<string, unknown>
       for (const key in data) {
-        if (splitKeys.includes(key)) {
-          const ref = `${fullName}#${key}`
-          const val =
-            ref in splitInfo ? splitInfo[ref] : (data[key] as string | string[])
-          if (!val) {
-            continue
-          }
-          if (val instanceof Array) {
-            output.push(`  ${key}: [ ${val.map(resolveRef).join(', ')} ],`)
-          } else {
-            output.push(`  ${key}: [ ${resolveRef(val)} ],`)
-          }
-        } else if (refKeys.includes(key)) {
-          const val = data[key] as true | string | number[]
-          if (typeof val === 'string') {
-            output.push(`  ${key}: ${resolveRef(val)},`)
-          } else {
-            output.push(`  ${key}: ${JSON.stringify(val)},`)
-          }
+        if (refKeys.includes(key)) {
+          const val = data[key + '@meta']
+          output.push(`  ${key}: ${resolveRef(val)},`)
+        } else if (key.endsWith('@meta')) {
+          continue
         } else {
           if (key === 'name') {
             // TODO

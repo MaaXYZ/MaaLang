@@ -128,49 +128,84 @@ export function $(module) {
 }
 
 export function $$() {
-  const needSplit = new Set()
+  const process = []
+  const cache = {}
 
   const transferItem = x => {
+    if (typeof x !== 'object') {
+      return x
+    }
     if (x.name) {
-      return x.name
+      return [x.name]
     } else if (x.ref) {
-      const k = `${x.ref.name}#${x.key}`
-      needSplit.add(k)
-      return k
+      const k = `${x.ref.name}->${x.key}`
+      if (k in cache) {
+        return cache[k]
+      } else if (process.includes(k)) {
+        process.push(k)
+        throw 'Loop detected!\n' + process.join(' => ')
+      } else {
+        process.push(k)
+        const res = []
+        let raw = x.ref[x.key] ?? []
+        if (!(raw instanceof Array)) {
+          raw = [raw]
+        }
+        for (const t of raw) {
+          res.push(...transferItem(t))
+        }
+        cache[k] = res
+        process.pop()
+        return res
+      }
+    } else {
+      return [x]
+    }
+  }
+
+  const result = {}
+
+  const metaInfo = x => {
+    if (x instanceof Array) {
+      return x.map(metaInfo)
+    } else if (typeof x === 'object') {
+      if (x.name) {
+        return {
+          ref: x.name
+        }
+      } else if (x.ref) {
+        return {
+          refk: x.ref.name,
+          key: x.key
+        }
+      } else {
+        return x
+      }
     } else {
       return x
     }
   }
 
-  const result = JSON.stringify(tasks, (key, value) => {
-    if (process_keys.includes(key)) {
-      if (
-        value instanceof Array &&
-        value.length > 0 &&
-        (value[0].name || value[0].ref)
-      ) {
-        return value.map(transferItem)
-      } else if (value instanceof Object && (value.name || value.ref)) {
-        return transferItem(value)
+  for (const taskName in tasks) {
+    const task = tasks[taskName]
+    const res = {}
+    result[taskName] = res
+    for (const key in task) {
+      if (process_keys.includes(key)) {
+        const val = task[key]
+        res[key + '@meta'] = metaInfo(val)
+        if (val instanceof Array) {
+          res[key] = val.map(transferItem).flat(1)
+        } else if (val instanceof Object) {
+          res[key] = transferItem(val)[0]
+        } else {
+          res[key] = val
+        }
       } else {
-        return value
+        res[key] = task[key]
       }
-    } else {
-      return value
-    }
-  })
-
-  const res = JSON.parse(result)
-
-  for (const key of needSplit) {
-    const [taskName, nextKey] = key.split('#')
-    const arr = res[taskName][nextKey]
-    res[taskName][nextKey] = key
-    res[key] = {
-      name: key,
-      next: arr
     }
   }
 
-  return res
+  return result
 }
