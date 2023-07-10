@@ -10,6 +10,7 @@ async function build_pipeline() {
   }
   try {
     const obj = $$()
+    await mkdir('dist', { recursive: true })
     await writeFile('dist/pipeline.json', JSON.stringify(obj, null, 2))
   } catch (err) {
     console.error(err)
