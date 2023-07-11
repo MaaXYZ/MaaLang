@@ -4,6 +4,16 @@ type Rect = [number, number, number, number]
 
 type ArrayFixLength<T, N extends number> = readonly T[] & { length: N }
 
+type JsonValue =
+  | null
+  | number
+  | string
+  | boolean
+  | JsonValue[]
+  | {
+      [key: string]: JsonValue
+    }
+
 type TemplateThresholdPair<N extends number> = {
   /**
    * 模板图片路径，绝对、相对均可
@@ -344,6 +354,27 @@ type Action =
        * 若为空，将关闭 `MaaControllerSetOption` - `MaaCtrlOption_DefaultAppPackage` 设置的 APP
        */
       package: string
+    }
+  | {
+      action: 'CustomTask'
+
+      /**
+       * 任务名
+       *
+       * bixuan
+       *
+       * 同 `MaaRegisterCustomTask` 接口传入的任务名
+       */
+      custom_task: string
+
+      /**
+       * 任务参数
+       *
+       * 可选，默认空json，即`{}`
+       *
+       * 任意json类型，通过 `MaaCustomTaskAPI.set_param` 传入json string
+       */
+      custom_param?: Record<string, JsonValue>
     }
 
 export type TaskInfo = TaskGeneral & Recognition & Action
