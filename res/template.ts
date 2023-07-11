@@ -1,11 +1,9 @@
 import { $ } from '@/pipeline'
 
-export const { task, task2, task3, task4, task5 } = $('')
+import { _import, _other, _task } from './path/of/script/without/suffix/dot/ts'
+
+export const { create, task, here } = $('set.task.scope.here')
 
 task.$ = {
-  next: [task2, task3]
-}
-
-task4.$ = {
-  next: [task5]
+  // put attribs here
 }
