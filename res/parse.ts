@@ -10,11 +10,11 @@ const refKeys = [
   'end'
 ]
 
-function parse_name(key: string): [string, string] {
+function parse_name(key: string, scope: string): [string, string] {
   const match = /^(.+)\.([^.]+)$/.exec(key)
   if (!match) {
     console.warn('Unknown key', key)
-    return ['', '']
+    return [scope, key]
   }
   return [match[1], match[2]]
 }
@@ -25,7 +25,7 @@ function fixName(name: string) {
 }
 
 async function parse_pipeline() {
-  let input = 'dist'
+  let input = 'dist/pipeline.json'
   if (process.argv.length >= 3) {
     input = process.argv[2]
   }
@@ -49,11 +49,11 @@ async function parse_pipeline() {
     }
   > = {}
 
+  const fscope = path.basename(input).replace('.json', '')
+
   for (const key in result) {
-    const [scope, name] = parse_name(key)
-    if (!scope) {
-      continue
-    }
+    const [scope, name] = parse_name(key, fscope)
+    result[`${scope}.${name}`] = result[key]
     if (!(scope in scopeInfo)) {
       scopeInfo[scope] = { import: {}, names: [] }
     }
@@ -74,7 +74,7 @@ async function parse_pipeline() {
         if (!rk) {
           return
         }
-        const [ss, sn] = parse_name(rk)
+        const [ss, sn] = parse_name(rk, fscope)
         if (!ss || ss === scope) {
           continue
         }
@@ -118,7 +118,7 @@ async function parse_pipeline() {
     )
 
     const resolve = (name: string) => {
-      const [s, n] = parse_name(name)
+      const [s, n] = parse_name(name, fscope)
       if (s === scope) {
         return n
       } else {
@@ -135,6 +135,8 @@ async function parse_pipeline() {
         } else if (val.refk) {
           return `${resolve(val.refk)}.$${val.key}`
         }
+      } else if (typeof val === 'string') {
+        return val
       }
       return JSON.stringify(val)
     }
@@ -145,7 +147,7 @@ async function parse_pipeline() {
       const data = result[fullName] as Record<string, unknown>
       for (const key in data) {
         if (refKeys.includes(key)) {
-          const val = data[key + '@meta']
+          const val = data[key + '@meta'] ?? data[key]
           output.push(`  ${key}: ${resolveRef(val)},`)
         } else if (key.endsWith('@meta')) {
           continue
