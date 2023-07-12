@@ -25,18 +25,18 @@ function fixName(name: string) {
 }
 
 async function parse_pipeline() {
-  let out = 'res/pipeline.parse'
+  let input = 'dist'
   if (process.argv.length >= 3) {
-    out = process.argv[2]
+    input = process.argv[2]
   }
 
-  let dist = 'dist'
+  let out = 'res/pipeline.parse'
   if (process.argv.length >= 4) {
-    dist = process.argv[3]
+    out = process.argv[3]
   }
 
   const result: Record<string, unknown> = JSON.parse(
-    await readFile(`${dist}/all.meta.json`, {
+    await readFile(`${input}`, {
       encoding: 'utf-8'
     })
   )
