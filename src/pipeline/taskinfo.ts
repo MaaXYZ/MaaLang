@@ -25,7 +25,7 @@ type TemplateThresholdPair<N extends number> = {
   /**
    * 模板匹配阈值
    *
-   * 可选，默认 0.8
+   * 可选，默认 0.7
    */
   threshold: ArrayFixLength<number, N & {}> | [never]
 }
@@ -88,9 +88,20 @@ type TaskGeneral = {
   next?: OneOrArray<TaskInfoHandler>
 
   /**
+   * 
+   * 是否是子任务。
+   * 
+   * 可选，默认否。
+   * 
+   * 如果是子任务，执行完本任务（及后续 next 等）后，会返回最近的 **非子任务** 继续执行。
+   * 
+   */
+  is_sub?: boolean
+
+  /**
    * 超时时间，毫秒
    *
-   * 默认`10 * 1000`
+   * 默认`20 * 1000`
    */
   timeout?: number
 
@@ -118,7 +129,7 @@ type TaskGeneral = {
   /**
    * 识别到 到 执行动作前 的延迟，毫秒
    *
-   * 可选，默认`0`
+   * 可选，默认`200`
    *
    * 推荐尽可能增加中间过程任务，少用延迟，不然既慢还不稳定
    */
@@ -127,7 +138,7 @@ type TaskGeneral = {
   /**
    * 执行动作后 到 下一个步骤 的延迟，毫秒
    *
-   * 可选，默认`0`
+   * 可选，默认`500`
    *
    * 推荐尽可能增加中间过程任务，少用延迟，不然既慢还不稳定
    */
@@ -141,11 +152,11 @@ type TaskGeneral = {
   checkpoint?: boolean
 
   /**
-   * 是否产生同步回调消息
+   * 产生同步回调消息。
    *
-   * 可选，默认否
+   * 可选，默认空，即不产生。
    */
-  notification?: boolean
+  notification?: string
 }
 
 type Recognition =
