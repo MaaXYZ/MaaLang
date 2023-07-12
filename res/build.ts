@@ -2,17 +2,22 @@ import { mkdir, readdir, writeFile } from 'fs/promises'
 import { $$ } from '@/pipeline'
 
 async function build_pipeline() {
-  for (const path of await readdir('res/pipeline')) {
+  let res = 'res/pipeline'
+  if (process.argv.length >= 3) {
+    res = process.argv[2]
+  }
+
+  let dist = 'dist'
+  if (process.argv.length >= 4) {
+    dist = process.argv[3]
+  }
+  for (const path of await readdir(res)) {
     if (!/.ts$/.test(path)) {
       continue
     }
-    await import(`./pipeline/${path}`)
+    await import(`../${res}/${path}`)
   }
   try {
-    let dist = 'dist'
-    if (process.argv.length >= 3) {
-      dist = process.argv[2]
-    }
     const obj = $$()
     await mkdir(`${dist}/partial`, { recursive: true })
 
