@@ -27,30 +27,34 @@ async function build_pipeline() {
       obj: unknown
     ) => {
       await writeFile(
-        `${outDir}/${fileScope}.meta.json`,
-        JSON.stringify(obj, null, 2)
-      )
-      await writeFile(
         `${outDir}/${fileScope}.json`,
-        JSON.stringify(obj, (key, value) => {
-          if (value instanceof Array) {
-            return value
-          } else if (typeof value === 'object') {
-            const res = {}
-            for (const k in value) {
-              if (!k.endsWith('@meta')) {
-                res[k] = value[k]
-              }
+        JSON.stringify(
+          obj,
+          (key, value) => {
+            if (key == 'name') {
+              return undefined
             }
-            return res
-          } else {
-            return value
-          }
-        })
+            if (value instanceof Array) {
+              return value
+            } else if (typeof value === 'object') {
+              const res = {}
+              for (const k in value) {
+                if (!k.endsWith('@meta')) {
+                  res[k] = value[k]
+                }
+              }
+              return res
+            } else {
+              return value
+            }
+          },
+          2
+        )
       )
     }
 
-    await writeObject(dist, 'all', obj)
+    await writeFile(`${dist}/all.meta.json`, JSON.stringify(obj, null, 2))
+
     const objs: Record<string, Record<string, unknown>> = {}
     for (const k in obj) {
       const m = /^(.+)\.([^.]+)$/.exec(k)
@@ -63,7 +67,7 @@ async function build_pipeline() {
       if (!(sc in objs)) {
         objs[sc] = {}
       }
-      objs[sc][kk] = obj[k]
+      objs[sc][k] = obj[k]
     }
     for (const sc in objs) {
       await writeObject(`${dist}/partial`, sc, objs[sc])
