@@ -11,10 +11,13 @@ async function build_pipeline() {
   try {
     const obj = $$()
     await mkdir('dist', { recursive: true })
-    await writeFile('dist/pipeline.json', JSON.stringify(obj, null, 2))
+    await writeFile('dist/all.meta.json', JSON.stringify(obj, null, 2))
     await writeFile(
-      'dist/pipeline.min.json',
+      'dist/all.json',
       JSON.stringify(obj, (key, value) => {
+        if (key == 'name') {
+            return undefined
+        }
         if (value instanceof Array) {
           return value
         } else if (typeof value === 'object') {
@@ -28,7 +31,7 @@ async function build_pipeline() {
         } else {
           return value
         }
-      })
+      }, 2)
     )
   } catch (err) {
     console.error(err)
