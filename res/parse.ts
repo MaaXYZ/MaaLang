@@ -25,8 +25,18 @@ function fixName(name: string) {
 }
 
 async function parse_pipeline() {
+  let out = 'res/pipeline.parse'
+  if (process.argv.length >= 3) {
+    out = process.argv[2]
+  }
+
+  let dist = 'dist'
+  if (process.argv.length >= 4) {
+    dist = process.argv[3]
+  }
+
   const result: Record<string, unknown> = JSON.parse(
-    await readFile('dist/pipeline.json', {
+    await readFile(`${dist}/all.meta.json`, {
       encoding: 'utf-8'
     })
   )
@@ -80,7 +90,7 @@ async function parse_pipeline() {
     const info = scopeInfo[scope]
     const scopes = scope.split('.')
     const file = scopes.pop()
-    const folder = path.join('res', 'pipeline.parse', ...scopes)
+    const folder = path.join(out, ...scopes)
     await mkdir(folder, {
       recursive: true
     })
@@ -95,7 +105,7 @@ async function parse_pipeline() {
       )
       output.push(
         `import { ${Array.from(impInfo)
-          .map(x => `${x} as ${other}.${x}`.replace('.', '$'))
+          .map((x) => `${x} as ${other}.${x}`.replace('.', '$'))
           .join(', ')} } from './${target}'`
       )
     }

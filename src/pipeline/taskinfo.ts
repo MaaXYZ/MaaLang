@@ -88,13 +88,13 @@ type TaskGeneral = {
   next?: OneOrArray<TaskInfoHandler>
 
   /**
-   * 
+   *
    * 是否是子任务。
-   * 
+   *
    * 可选，默认否。
-   * 
+   *
    * 如果是子任务，执行完本任务（及后续 next 等）后，会返回最近的 **非子任务** 继续执行。
-   * 
+   *
    */
   is_sub?: boolean
 
